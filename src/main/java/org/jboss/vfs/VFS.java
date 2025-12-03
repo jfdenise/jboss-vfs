@@ -42,9 +42,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.jboss.vfs.spi.AssemblyFileSystem;
 import org.jboss.vfs.spi.FileSystem;
 import org.jboss.vfs.spi.JavaZipFileSystem;
+import org.jboss.vfs.spi.JavaZipFileSystemGraal;
 import org.jboss.vfs.spi.MountHandle;
 import org.jboss.vfs.spi.RealFileSystem;
 import org.jboss.vfs.spi.RootFileSystem;
+import org.wildfly.graal.runtime.WildFlyGraalSetup;
 
 /**
  * Virtual File System
@@ -254,6 +256,9 @@ public class VFS {
     }
 
     static Mount getMount(VirtualFile virtualFile) {
+        if (WildFlyGraalSetup.isRuntime()) {
+            throw new RuntimeException("Can't access the VFS at runtime, to load " + virtualFile + " all should already be loaded");
+        }
         final ConcurrentMap<VirtualFile, Map<String, Mount>> mounts = VFS.mounts;
         for (; ; ) {
             final VirtualFile parent = virtualFile.getParent();
@@ -316,7 +321,9 @@ public class VFS {
         boolean ok = false;
         final TempDir tempDir = tempFileProvider.createTempDir(zipFile.getName());
         try {
-            final MountHandle handle = doMount(new JavaZipFileSystem(zipFile, tempDir), mountPoint);
+            FileSystem fs = WildFlyGraalSetup.isBuildTime() ? new JavaZipFileSystemGraal(zipFile, tempDir) :
+                new JavaZipFileSystem(zipFile, tempDir);
+            final MountHandle handle = doMount(fs, mountPoint);
             ok = true;
             return handle;
         } finally {
@@ -342,7 +349,9 @@ public class VFS {
         try {
             final TempDir tempDir = tempFileProvider.createTempDir(zipName);
             try {
-                final MountHandle handle = doMount(new JavaZipFileSystem(zipName, zipData, tempDir), mountPoint);
+                FileSystem fs = WildFlyGraalSetup.isBuildTime() ? new JavaZipFileSystemGraal(zipName, zipData, tempDir) :
+                        new JavaZipFileSystem(zipName, zipData, tempDir);
+                final MountHandle handle = doMount(fs, mountPoint);
                 ok = true;
                 return handle;
             } finally {

@@ -32,6 +32,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 
 import org.jboss.vfs.util.PathTokenizer;
+import org.wildfly.graal.runtime.WildFlyGraalSetup;
 
 /**
  * Assembly of VirtualFiles that can be mounted into the VFS in a structure
@@ -41,7 +42,14 @@ import org.jboss.vfs.util.PathTokenizer;
  */
 public class VirtualFileAssembly implements Closeable {
 
-    private static final Random RANDOM_NUM_GEN = new SecureRandom();
+    private static final Random RANDOM_NUM_GEN;
+    static {
+        if (WildFlyGraalSetup.isBuildTime()) {
+            RANDOM_NUM_GEN = null;
+        } else {
+            RANDOM_NUM_GEN = new SecureRandom();
+        }
+    }
     private final AssemblyNode rootNode = new AssemblyNode("");
     private final List<Closeable> mountHandles = new CopyOnWriteArrayList<Closeable>();
     private final VirtualFile mountRoot = VFS.getChild("assembly-mounts").getChild(getAssemblyId());
@@ -142,7 +150,11 @@ public class VirtualFileAssembly implements Closeable {
     }
 
     private String getAssemblyId() {
-        return Long.toHexString(RANDOM_NUM_GEN.nextLong());
+        Random random = RANDOM_NUM_GEN;
+        if (RANDOM_NUM_GEN == null) {
+            random = new SecureRandom();
+        }
+        return Long.toHexString(random.nextLong());
     }
 
     /**

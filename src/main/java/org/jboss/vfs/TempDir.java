@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.wildfly.graal.runtime.WildFlyGraalSetup;
 
 /**
  * A temporary directory which exists until it is closed, at which time its contents will be removed.
@@ -105,6 +106,10 @@ public final class TempDir implements Closeable {
      * @throws IOException if an I/O error occurs
      */
     public void close() throws IOException {
+        if (WildFlyGraalSetup.isRuntime()) {
+            //System.out.println("DO NOT CLOSE TempDir, can be reused...");
+            return;
+        }
         if (open.getAndSet(false)) {
             provider.delete(root);
         }

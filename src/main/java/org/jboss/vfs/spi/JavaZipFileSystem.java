@@ -56,7 +56,7 @@ import org.jboss.vfs.util.PathTokenizer;
  * @author <a href="mailto:david.lloyd@redhat.com">David M. Lloyd</a>
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public final class JavaZipFileSystem implements FileSystem {
+public class JavaZipFileSystem implements FileSystem {
 
     private final JarFile zipFile;
     private final File archiveFile;

@@ -25,6 +25,7 @@ import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.wildfly.graal.runtime.WildFlyGraalSetup;
 
 /**
  * A provider for temporary physical files and directories.
@@ -142,8 +143,6 @@ public final class TempFileProvider implements Closeable {
         throw VFSMessages.MESSAGES.couldNotCreateDirectory(originalName,RETRIES);
     }
 
-    private static final Random rng = new Random();
-
     private static File createTempDir(String prefix, String suffix, File root) throws IOException {
         for (int i = 0; i < RETRIES; i++) {
             final File f = new File(root, createTempName(prefix, suffix));
@@ -162,6 +161,7 @@ public final class TempFileProvider implements Closeable {
     }
 
     static String createTempName(String prefix, String suffix) {
+        Random rng = new Random();
         return prefix + Long.toHexString(rng.nextLong()) + suffix;
     }
 
@@ -169,6 +169,10 @@ public final class TempFileProvider implements Closeable {
      * Close this provider and delete any temp files associated with it.
      */
     public void close() throws IOException {
+        if (WildFlyGraalSetup.isRuntime()) {
+            //System.out.println("DO NOT CLOSE TempFileProvider, can be reused...");
+            return;
+        }
         if (open.getAndSet(false)) {
             delete(this.providerRoot);
         }
