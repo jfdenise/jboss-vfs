@@ -142,8 +142,6 @@ public final class TempFileProvider implements Closeable {
         throw VFSMessages.MESSAGES.couldNotCreateDirectory(originalName,RETRIES);
     }
 
-    private static final Random rng = new Random();
-
     private static File createTempDir(String prefix, String suffix, File root) throws IOException {
         for (int i = 0; i < RETRIES; i++) {
             final File f = new File(root, createTempName(prefix, suffix));
@@ -162,6 +160,7 @@ public final class TempFileProvider implements Closeable {
     }
 
     static String createTempName(String prefix, String suffix) {
+        Random rng = new Random();
         return prefix + Long.toHexString(rng.nextLong()) + suffix;
     }
 
