@@ -41,7 +41,6 @@ import org.jboss.vfs.util.PathTokenizer;
  */
 public class VirtualFileAssembly implements Closeable {
 
-    private static final Random RANDOM_NUM_GEN = new SecureRandom();
     private final AssemblyNode rootNode = new AssemblyNode("");
     private final List<Closeable> mountHandles = new CopyOnWriteArrayList<Closeable>();
     private final VirtualFile mountRoot = VFS.getChild("assembly-mounts").getChild(getAssemblyId());
@@ -142,6 +141,7 @@ public class VirtualFileAssembly implements Closeable {
     }
 
     private String getAssemblyId() {
+        Random RANDOM_NUM_GEN = new SecureRandom();
         return Long.toHexString(RANDOM_NUM_GEN.nextLong());
     }
 
